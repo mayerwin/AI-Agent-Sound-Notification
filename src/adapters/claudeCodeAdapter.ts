@@ -25,6 +25,7 @@ import {
 } from '../notificationManager';
 import { parseJsonc, atomicWriteJsonFile } from '../utils/jsonc';
 import { info, debug } from '../utils/logger';
+import { TranscriptWatcher } from './transcriptWatcher';
 
 const ADAPTER_NAME = 'Claude Code';
 const PORT_FILE_PREFIX = 'port-';
@@ -34,6 +35,11 @@ interface PortFileContent {
     port: number;
     token: string;
     pid: number;
+}
+
+function extractQuery(url: string, key: string): string | null {
+    const m = url.match(new RegExp(`[?&]${key}=([^&]+)`));
+    return m ? decodeURIComponent(m[1]) : null;
 }
 
 interface ClaudeSettings {
@@ -67,6 +73,7 @@ export class ClaudeCodeAdapter implements AgentAdapter {
     private port: number = 0;
     private token: string = '';
     private portFilePath: string = '';
+    private transcriptWatcher: TranscriptWatcher | null = null;
 
     private log(msg: string): void {
         info(`${LOG_PREFIX} ${msg}`);
@@ -151,14 +158,20 @@ export class ClaudeCodeAdapter implements AgentAdapter {
                 }
 
                 switch (pathname) {
-                    case '/alert':
+                    case '/alert': {
                         triggerNotification(ADAPTER_NAME);
+                        const transcriptPath = extractQuery(url, 'transcriptPath');
+                        if (transcriptPath) {
+                            this.startTranscriptWatcher(transcriptPath);
+                        }
                         res.writeHead(200); res.end('ok');
                         return;
+                    }
                     case '/completed':
-                        // Stop hook: agent finished its turn.
-                        // If a permission alert was active, treat as dismissal (no completion sound).
-                        // Otherwise, play the completion sound.
+                        // Stop hook OR transcript watcher detected turn-end via
+                        // denial. If a permission alert was active, treat as
+                        // dismissal (no completion sound). Otherwise, play it.
+                        this.stopTranscriptWatcher();
                         if (isNotificationActive()) {
                             dismissNotification('Claude Code turn ended');
                         } else {
@@ -168,6 +181,7 @@ export class ClaudeCodeAdapter implements AgentAdapter {
                         return;
                     case '/dismiss':
                         // UserPromptSubmit: user is interacting; clear pending alert AND reset turn state.
+                        this.stopTranscriptWatcher();
                         notifyTurnReset();
                         dismissNotification('Claude Code user prompt submitted');
                         res.writeHead(200); res.end('ok');
@@ -176,6 +190,7 @@ export class ClaudeCodeAdapter implements AgentAdapter {
                         // PostToolUse: a tool just completed (i.e. permission was granted and the
                         // tool ran). Dismiss the alert but DO NOT reset the per-turn flag — an
                         // alert was still shown, so completion sound should remain suppressed.
+                        this.stopTranscriptWatcher();
                         dismissNotification('Claude Code tool completed');
                         res.writeHead(200); res.end('ok');
                         return;
@@ -211,6 +226,27 @@ export class ClaudeCodeAdapter implements AgentAdapter {
                 reject(err);
             });
         });
+    }
+
+    private startTranscriptWatcher(transcriptPath: string): void {
+        this.stopTranscriptWatcher();
+        this.transcriptWatcher = new TranscriptWatcher(transcriptPath, (reason) => {
+            this.dlog(`transcript watcher fired: ${reason}`);
+            // Route through the same path as the Stop hook.
+            if (isNotificationActive()) {
+                dismissNotification('Claude Code turn ended (denial detected)');
+            } else {
+                triggerCompletion(ADAPTER_NAME).catch(() => { /* logged inside */ });
+            }
+        });
+        this.transcriptWatcher.start();
+    }
+
+    private stopTranscriptWatcher(): void {
+        if (this.transcriptWatcher) {
+            this.transcriptWatcher.stop();
+            this.transcriptWatcher = null;
+        }
     }
 
     private getPortDir(): string {
@@ -336,6 +372,8 @@ export class ClaudeCodeAdapter implements AgentAdapter {
     }
 
     dispose(): void {
+        this.stopTranscriptWatcher();
+
         try {
             if (this.portFilePath && fs.existsSync(this.portFilePath)) {
                 fs.unlinkSync(this.portFilePath);

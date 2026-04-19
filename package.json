@@ -2,7 +2,7 @@
   "name": "ai-agent-sound-notification",
   "displayName": "AI Agent Sound Notification",
   "description": "Plays a distinct sound when Claude Code requires user authorization. Configurable delays, back-off repeats, and Windows Focus Assist awareness.",
-  "version": "1.0.10",
+  "version": "1.0.11",
   "publisher": "mayerwin",
   "license": "MIT",
   "repository": {

@@ -1,5 +1,14 @@
 # Change Log
 
+## 1.0.11 — 2026-04-19
+
+- Dismiss the pending alert when the user **denies** a permission prompt.
+  Claude Code fires no hook on manual rejection (confirmed in the official
+  hooks docs), so we now tail the session transcript for the denial marker
+  and route detection through the same path as the `Stop` hook.
+- `claude-hook.js` now reads the JSON payload Claude Code pipes on stdin and
+  forwards `transcript_path` to the extension's HTTP server on `/alert`.
+
 ## 1.0.10 — 2026-04-19
 
 - Add extension icon for VS Marketplace listing.
