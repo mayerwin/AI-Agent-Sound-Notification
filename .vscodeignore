@@ -5,6 +5,7 @@
 src/**
 node_modules/**
 scripts/generate-sounds.js
+scripts/generate-icon.ps1
 out/**/*.map
 out/**/*.d.ts
 out/**/*.d.ts.map
