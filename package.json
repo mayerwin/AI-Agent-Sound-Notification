@@ -1,0 +1,293 @@
+{
+  "name": "ai-agent-sound-notification",
+  "displayName": "AI Agent Sound Notification",
+  "description": "Plays a distinct sound when Claude Code requires user authorization. Configurable delays, back-off repeats, and Windows Focus Assist awareness.",
+  "version": "1.0.9",
+  "publisher": "erwin",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/mayerwin/AI-Agent-Sound-Notification.git"
+  },
+  "bugs": {
+    "url": "https://github.com/mayerwin/AI-Agent-Sound-Notification/issues"
+  },
+  "homepage": "https://github.com/mayerwin/AI-Agent-Sound-Notification#readme",
+  "engines": {
+    "vscode": "^1.85.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "keywords": [
+    "ai",
+    "agent",
+    "notification",
+    "sound",
+    "claude",
+    "approval",
+    "authorization"
+  ],
+  "activationEvents": [
+    "onStartupFinished"
+  ],
+  "main": "./out/extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "aiAgentSoundNotification.triggerAlert",
+        "title": "Trigger Alert (for hooks)",
+        "category": "AI Agent Sound"
+      },
+      {
+        "command": "aiAgentSoundNotification.dismissAlert",
+        "title": "Dismiss Active Alert",
+        "category": "AI Agent Sound"
+      },
+      {
+        "command": "aiAgentSoundNotification.testSound",
+        "title": "Play Test Sound",
+        "category": "AI Agent Sound"
+      },
+      {
+        "command": "aiAgentSoundNotification.chooseSound",
+        "title": "Choose Built-In Sound...",
+        "category": "AI Agent Sound"
+      },
+      {
+        "command": "aiAgentSoundNotification.cleanupClaudeHooks",
+        "title": "Remove Claude Settings Hooks",
+        "category": "AI Agent Sound"
+      },
+      {
+        "command": "aiAgentSoundNotification.previewAlertSound",
+        "title": "Preview Alert Sound",
+        "category": "AI Agent Sound"
+      },
+      {
+        "command": "aiAgentSoundNotification.previewCompletionSound",
+        "title": "Preview Completion Sound",
+        "category": "AI Agent Sound"
+      },
+      {
+        "command": "aiAgentSoundNotification.resetSettings",
+        "title": "Reset Settings to Defaults",
+        "category": "AI Agent Sound"
+      }
+    ],
+    "configuration": {
+      "title": "AI Agent Sound Notification",
+      "properties": {
+        "aiAgentSoundNotification.enabled": {
+          "type": "boolean",
+          "default": true,
+          "description": "Enable or disable sound notifications.",
+          "order": 1
+        },
+        "aiAgentSoundNotification.initialDelay": {
+          "type": "string",
+          "default": "10s",
+          "description": "Delay before the first sound plays after a prompt appears. Gives you time to react if you're already looking at the IDE. Format: '10s', '30s', '1m'.",
+          "order": 2
+        },
+        "aiAgentSoundNotification.soundName": {
+          "type": "string",
+          "default": "md-alert-simple",
+          "enum": [
+            "md-alert-simple",
+            "md-alert-high",
+            "md-alarm-gentle",
+            "md-notif-ambient",
+            "md-notif-simple-1",
+            "md-notif-simple-2",
+            "md-notif-decorative-1",
+            "md-notif-decorative-2",
+            "md-notif-high",
+            "md-ringtone-minimal",
+            "md-hero-simple-1",
+            "md-hero-simple-2",
+            "md-hero-simple-3",
+            "md-hero-decorative-1",
+            "md-hero-decorative-2",
+            "md-hero-decorative-3",
+            "alert",
+            "chime",
+            "bell",
+            "ding",
+            "harp",
+            "fanfare",
+            "success",
+            "gentle",
+            "zen",
+            "arpeggio"
+          ],
+          "enumDescriptions": [
+            "[Material Design] Clear, simple alert (default)",
+            "[Material Design] Urgent high-intensity alert",
+            "[Material Design] Soft repeating alarm (~6s)",
+            "[Material Design] Soft, ambient notification",
+            "[Material Design] Clean two-tone ping",
+            "[Material Design] Clean two-tone ping (variant)",
+            "[Material Design] Pleasant decorative chime",
+            "[Material Design] Pleasant decorative chime (variant)",
+            "[Material Design] Strong notification tone",
+            "[Material Design] Minimal looping ringtone",
+            "[Material Design] Crisp 'done!' celebration",
+            "[Material Design] Crisp 'done!' celebration (variant)",
+            "[Material Design] Crisp 'done!' celebration (variant)",
+            "[Material Design] Richer celebratory flourish",
+            "[Material Design] Richer celebratory flourish (variant)",
+            "[Material Design] Richer celebratory flourish (variant)",
+            "[Synthesized] Two-tone notification chime",
+            "[Synthesized] Gentle ascending major triad",
+            "[Synthesized] Single rich bell strike with long decay",
+            "[Synthesized] Bright, short single ding",
+            "[Synthesized] Quick C-major harp arpeggio",
+            "[Synthesized] Triumphant brass-style fanfare",
+            "[Synthesized] Ascending pentatonic 'level up' melody",
+            "[Synthesized] Soft sine pad — slow attack & release",
+            "[Synthesized] Meditative singing bowl",
+            "[Synthesized] Cascading bell arpeggio in D major"
+          ],
+          "markdownDescription": "Which built-in sound to play for permission alerts. Overridden by `#aiAgentSoundNotification.soundFile#` if that is set.\n\nSounds prefixed with `md-` are from [Google's Material Design Sound Resources](https://m2.material.io/design/sound/sound-resources.html) (CC-BY 4.0) — generally cleaner and more polished. The unprefixed sounds are synthesized in-house and kept as alternatives.\n\n[▶ Preview alert sound](command:aiAgentSoundNotification.previewAlertSound)",
+          "order": 3
+        },
+        "aiAgentSoundNotification.soundFile": {
+          "type": "string",
+          "default": "",
+          "markdownDescription": "Absolute path to a custom `.wav` file. When set, overrides `#aiAgentSoundNotification.soundName#`.\n\n[▶ Preview alert sound](command:aiAgentSoundNotification.previewAlertSound)",
+          "order": 4
+        },
+        "aiAgentSoundNotification.completionSound.enabled": {
+          "type": "boolean",
+          "default": true,
+          "description": "Play a completion sound when the agent finishes its turn without ever needing approval. (Suppressed if a permission alert was shown during the turn.)",
+          "order": 5
+        },
+        "aiAgentSoundNotification.completionSound.name": {
+          "type": "string",
+          "default": "md-hero-simple-1",
+          "enum": [
+            "md-alert-simple",
+            "md-alert-high",
+            "md-alarm-gentle",
+            "md-notif-ambient",
+            "md-notif-simple-1",
+            "md-notif-simple-2",
+            "md-notif-decorative-1",
+            "md-notif-decorative-2",
+            "md-notif-high",
+            "md-ringtone-minimal",
+            "md-hero-simple-1",
+            "md-hero-simple-2",
+            "md-hero-simple-3",
+            "md-hero-decorative-1",
+            "md-hero-decorative-2",
+            "md-hero-decorative-3",
+            "alert",
+            "chime",
+            "bell",
+            "ding",
+            "harp",
+            "fanfare",
+            "success",
+            "gentle",
+            "zen",
+            "arpeggio"
+          ],
+          "enumDescriptions": [
+            "[Material Design] Clear, simple alert",
+            "[Material Design] Urgent high-intensity alert",
+            "[Material Design] Soft repeating alarm (~6s)",
+            "[Material Design] Soft, ambient notification",
+            "[Material Design] Clean two-tone ping",
+            "[Material Design] Clean two-tone ping (variant)",
+            "[Material Design] Pleasant decorative chime",
+            "[Material Design] Pleasant decorative chime (variant)",
+            "[Material Design] Strong notification tone",
+            "[Material Design] Minimal looping ringtone",
+            "[Material Design] Crisp 'done!' celebration (default)",
+            "[Material Design] Crisp 'done!' celebration (variant)",
+            "[Material Design] Crisp 'done!' celebration (variant)",
+            "[Material Design] Richer celebratory flourish",
+            "[Material Design] Richer celebratory flourish (variant)",
+            "[Material Design] Richer celebratory flourish (variant)",
+            "[Synthesized] Two-tone notification chime",
+            "[Synthesized] Gentle ascending major triad",
+            "[Synthesized] Single rich bell strike with long decay",
+            "[Synthesized] Bright, short single ding",
+            "[Synthesized] Quick C-major harp arpeggio",
+            "[Synthesized] Triumphant brass-style fanfare",
+            "[Synthesized] Ascending pentatonic 'level up' melody",
+            "[Synthesized] Soft sine pad — slow attack & release",
+            "[Synthesized] Meditative singing bowl",
+            "[Synthesized] Cascading bell arpeggio in D major"
+          ],
+          "markdownDescription": "Built-in sound to play on agent completion. Overridden by `#aiAgentSoundNotification.completionSound.file#` if that is set.\n\nSounds prefixed with `md-` are from [Google's Material Design Sound Resources](https://m2.material.io/design/sound/sound-resources.html) (CC-BY 4.0). The unprefixed sounds are synthesized in-house and kept as alternatives.\n\n[▶ Preview completion sound](command:aiAgentSoundNotification.previewCompletionSound)",
+          "order": 6
+        },
+        "aiAgentSoundNotification.completionSound.file": {
+          "type": "string",
+          "default": "",
+          "markdownDescription": "Optional path to a custom `.wav` for completion. When set, overrides `#aiAgentSoundNotification.completionSound.name#`.\n\n[▶ Preview completion sound](command:aiAgentSoundNotification.previewCompletionSound)",
+          "order": 7
+        },
+        "aiAgentSoundNotification.repeat.enabled": {
+          "type": "boolean",
+          "default": false,
+          "description": "Repeat the notification sound periodically until the prompt is acknowledged.",
+          "order": 8
+        },
+        "aiAgentSoundNotification.repeat.intervals": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "default": [
+            "1m",
+            "5m",
+            "10m",
+            "30m",
+            "1h",
+            "3h"
+          ],
+          "description": "Back-off intervals for repeat notifications. After the last interval, notifications stop. Format: '30s', '1m', '5m', '1h', '3h'.",
+          "order": 9
+        },
+        "aiAgentSoundNotification.respectDND": {
+          "type": "boolean",
+          "default": false,
+          "description": "When enabled, suppresses sound playback if Windows Focus Assist (Do Not Disturb) is active. Silently ignored on macOS/Linux.",
+          "order": 10
+        },
+        "aiAgentSoundNotification.integrations.claudeCode": {
+          "type": "boolean",
+          "default": true,
+          "description": "Enable integration with Claude Code. Registers PermissionRequest / Stop / UserPromptSubmit / PostToolUse hooks in ~/.claude/settings.json.",
+          "order": 11
+        },
+        "aiAgentSoundNotification.debug": {
+          "type": "boolean",
+          "default": false,
+          "description": "Write verbose diagnostic logs to the 'AI Agent Sound Notification' Output channel (audio spawn details, timer events, hook pings, etc.). Activation messages and errors are always logged regardless.",
+          "order": 12
+        }
+      }
+    }
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run compile",
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./",
+    "lint": "eslint src --ext ts",
+    "package": "npm version patch --no-git-tag-version && npx @vscode/vsce package",
+    "package:minor": "npm version minor --no-git-tag-version && npx @vscode/vsce package",
+    "package:major": "npm version major --no-git-tag-version && npx @vscode/vsce package",
+    "package:nobump": "npx @vscode/vsce package"
+  },
+  "devDependencies": {
+    "@types/node": "^20.11.0",
+    "@types/vscode": "^1.85.0",
+    "typescript": "^5.3.3"
+  }
+}

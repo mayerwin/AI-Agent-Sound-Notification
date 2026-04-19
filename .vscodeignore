@@ -1,0 +1,16 @@
+.vscode/**
+.vscode-test/**
+.github/**
+.claude/**
+src/**
+node_modules/**
+scripts/generate-sounds.js
+out/**/*.map
+out/**/*.d.ts
+out/**/*.d.ts.map
+**/tsconfig.json
+.gitignore
+.vscodeignore
+DEVELOPMENT.md
+package-lock.json
+*.vsix
